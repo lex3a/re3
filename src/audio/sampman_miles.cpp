@@ -450,7 +450,7 @@ _FindMP3s(void)
 		return;
 	}
 	
-	FILE *f = fopen("MP3\\MP3Report.txt", "w");
+	FILE *f = fcaseopen("MP3\\MP3Report.txt", "w");
 	
 	if ( f )
 	{
@@ -961,7 +961,7 @@ cSampleManager::Initialise(void)
 	
 #ifdef AUDIO_CACHE
 	TRACE("cache");
-	FILE *cacheFile = fopen("audio\\sound.cache", "rb");
+	FILE *cacheFile = fcaseopen("audio\\sound.cache", "rb");
 	if (cacheFile) {
 		fread(nStreamLength, sizeof(uint32), TOTAL_STREAMED_SOUNDS, cacheFile);
 		fclose(cacheFile);
@@ -995,7 +995,7 @@ cSampleManager::Initialise(void)
 					strcpy(filepath, m_szCDRomRootPath);
 					strcat(filepath, StreamedNameTable[0]);
 					
-					FILE *f = fopen(filepath, "rb");
+					FILE *f = fcaseopen(filepath, "rb");
 					
 					if ( f )
 					{
@@ -1078,7 +1078,7 @@ cSampleManager::Initialise(void)
 		strcpy(_aHDDPath, m_szCDRomRootPath);
 		rootpath[0] = '\0';
 		
-		FILE *f = fopen(StreamedNameTable[0], "rb");
+		FILE *f = fcaseopen(StreamedNameTable[0], "rb");
 		
 		if ( f )
 		{
@@ -1125,7 +1125,7 @@ cSampleManager::Initialise(void)
 	}
 #endif
 #ifdef AUDIO_CACHE
-	cacheFile = fopen("audio\\sound.cache", "wb");
+	cacheFile = fcaseopen("audio\\sound.cache", "wb");
 	fwrite(nStreamLength, sizeof(uint32), TOTAL_STREAMED_SOUNDS, cacheFile);
 	fclose(cacheFile);
 	}
@@ -1311,7 +1311,7 @@ cSampleManager::CheckForAnAudioFileOnCD(void)
 
 	strcat(filepath, StreamedNameTable[AudioManager.GetRandomNumber(1) % TOTAL_STREAMED_SOUNDS]);
 	
-	FILE *f = fopen(filepath, "rb");
+	FILE *f = fcaseopen(filepath, "rb");
 	
 	if ( f )
 	{
@@ -2291,11 +2291,11 @@ cSampleManager::InitialiseSampleBanks(void)
 {
 	int32 nBank = SFX_BANK_0;
 	
-	fpSampleDescHandle = fopen(SampleBankDescFilename, "rb");
+	fpSampleDescHandle = fcaseopen(SampleBankDescFilename, "rb");
 	if ( fpSampleDescHandle == NULL )
 		return false;
 	
-	fpSampleDataHandle = fopen(SampleBankDataFilename, "rb");
+	fpSampleDataHandle = fcaseopen(SampleBankDataFilename, "rb");
 	if ( fpSampleDataHandle == NULL )
 	{
 		fclose(fpSampleDescHandle);

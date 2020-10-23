@@ -13,11 +13,17 @@
 #else
 #include "crossplatform.h"
 #endif
+#if !defined(PSP2)
 #include <sndfile.h>
+#else
+#define DR_WAV_IMPLEMENTATION
+#include "dr_wav.h"
+#endif
 #include <mpg123.h>
 #endif
 
 #ifndef AUDIO_OPUS
+#if !defined(PSP2)
 class CSndFile : public IDecoder
 {
 	SNDFILE *m_pfSound;
@@ -82,6 +88,95 @@ public:
 		return sf_read_short(m_pfSound, (short *)buffer, GetBufferSamples()) * GetSampleSize();
 	}
 };
+#else
+class CDrWav : public IDecoder
+{
+	drwav m_drWav;
+	bool m_bIsLoaded;
+public:
+	CDrWav(const char *path) :
+		m_bIsLoaded(false)
+	{
+		memset(&m_drWav, 0, sizeof(m_drWav));
+		if( !drwav_init_file(&m_drWav, path, NULL) ) {
+			return;
+		}
+
+		m_bIsLoaded = true;
+		//memset(&m_soundInfo, 0, sizeof(m_soundInfo));
+		//m_pfSound = sf_open(path, SFM_READ, &m_soundInfo);
+	}
+
+	~CDrWav()
+	{
+		if ( m_bIsLoaded )
+		{
+			drwav_uninit(&m_drWav);
+			m_bIsLoaded = false;
+		}
+	}
+
+	bool IsOpened()
+	{
+		return m_bIsLoaded;
+	}
+
+	uint32 GetSampleSize()
+	{
+		return drwav_get_bytes_per_pcm_frame(&m_drWav);
+		//return sizeof(uint16);
+	}
+	
+	uint32 GetSampleCount()
+	{
+		return m_drWav.totalPCMFrameCount;
+	}
+	
+	uint32 GetSampleRate()
+	{
+		return m_drWav.sampleRate;
+	}
+	
+	uint32 GetChannels()
+	{
+		return m_drWav.channels;
+	}
+	
+	void Seek(uint32 milliseconds)
+	{
+		//if()
+		if ( !IsOpened() ) return;
+		drwav_seek_to_pcm_frame(&m_drWav, ms2samples(milliseconds));
+		//sf_seek(m_pfSound, ms2samples(milliseconds), SF_SEEK_SET);
+	}
+	
+	uint32 Tell()
+	{
+		if ( !IsOpened() ) return 0;
+		//return samples2ms(sf_seek(m_pfSound, 0, SF_SEEK_CUR));
+
+		if (drwav__is_compressed_format_tag(m_drWav.translatedFormatTag)) {
+			return samples2ms(m_drWav.compressed.iCurrentPCMFrame);
+		} else {
+			uint32 bytes_per_frame = GetSampleSize();
+			return samples2ms(
+				((m_drWav.totalPCMFrameCount * bytes_per_frame) - m_drWav.bytesRemaining) / bytes_per_frame
+			);
+		}
+		
+		//drwav_current
+		//return samples2ms(m_drWav.current)
+		//return samples2ms(drwav_seek_to_first_pcm_frame(&m_drWav));
+	}
+	
+	uint32 Decode(void *buffer)
+	{
+		if ( !IsOpened() ) return 0;
+		return drwav_read_raw(&m_drWav, GetBufferSize(), buffer);
+		//return sf_read_short(m_pfSound, (short *)buffer, GetBufferSamples()) * GetSampleSize();
+	}
+};
+#endif
 
 class CMP3File : public IDecoder
 {
@@ -316,7 +411,11 @@ CStream::CStream(char *filename, ALuint &source, ALuint (&buffers)[NUM_STREAMBUF
 	if (!strcasecmp(&m_aFilename[strlen(m_aFilename) - strlen(".mp3")], ".mp3"))
 		m_pSoundFile = new CMP3File(m_aFilename);
 	else if (!strcasecmp(&m_aFilename[strlen(m_aFilename) - strlen(".wav")], ".wav"))
+#if !defined(PSP2)
 		m_pSoundFile = new CSndFile(m_aFilename);
+#else
+		m_pSoundFile = new CDrWav(m_aFilename);
+#endif
 #else
 	if (!strcasecmp(&m_aFilename[strlen(m_aFilename) - strlen(".opus")], ".opus"))
 		m_pSoundFile = new COpusFile(m_aFilename);

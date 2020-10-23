@@ -215,15 +215,21 @@ CMBlur::MotionBlurRender(RwCamera *cam, uint32 red, uint32 green, uint32 blue, u
 		OverlayRender(cam, pFrontBuffer, color, type, bluralpha);
 #else
 	if(BlurOn){
+#if !defined(PSP2)
 		if(pFrontBuffer){
 			if(ms_bJustInitialised)
 				ms_bJustInitialised = false;
 			else
 				OverlayRender(cam, pFrontBuffer, color, type, bluralpha);
 		}
+#endif
 		RwRasterPushContext(pFrontBuffer);
 		RwRasterRenderFast(RwCameraGetRaster(cam), 0, 0);
 		RwRasterPopContext();
+#ifdef PSP2
+		if(pFrontBuffer)
+			OverlayRender(cam, pFrontBuffer, color, type, bluralpha);
+#endif
 	}else{
 		OverlayRender(cam, nil, color, type, bluralpha);
 	}

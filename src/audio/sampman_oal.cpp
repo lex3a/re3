@@ -352,11 +352,13 @@ set_new_provider(int index)
 		
 		alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
 		
+#if !defined(PSP2)
 		if ( alcIsExtensionPresent(ALDevice, (ALCchar*)ALC_EXT_EFX_NAME) )
 		{
 			alGenAuxiliaryEffectSlots(1, &ALEffectSlot);
 			alGenEffects(1, &ALEffect);
 		}
+#endif
 		
 		for ( int32 i = 0; i < MAX_STREAMS; i++ )
 		{
@@ -379,6 +381,7 @@ set_new_provider(int index)
 		usingEAX3 = 0;
 		_usingEFX = false;
 		
+#if !defined(PSP2)
 		if ( !strcmp(&providers[index].name[strlen(providers[index].name) - strlen(" EAX3")], " EAX3") 
 				&& alcIsExtensionPresent(ALDevice, (ALCchar*)ALC_EXT_EFX_NAME) )
 		{
@@ -404,6 +407,7 @@ set_new_provider(int index)
 				DEV("EFX\n");
 			}
 		}
+#endif
 		
 		//SampleManager.SetSpeakerConfig(speaker_type);
 				

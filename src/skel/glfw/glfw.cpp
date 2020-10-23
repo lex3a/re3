@@ -44,6 +44,10 @@
 #define MAX_SUBSYSTEMS		(16)
 
 
+#ifdef PSP2
+int _newlib_heap_size_user = 256 * 1024 * 1024;
+#endif
+
 rw::EngineOpenParams openParams;
 
 static RwBool		  ForegroundApp = TRUE;
@@ -81,7 +85,9 @@ DWORD _dwOperatingSystemVersion;
 #else
 long _dwOperatingSystemVersion;
 #ifndef __APPLE__
+#if !defined(PSP2)
 #include <sys/sysinfo.h>
+#endif
 #else
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
@@ -464,7 +470,7 @@ psInitialize(void)
 	_dwMemAvailPhys = (uint64_t)(vm_stat.free_count * page_size);
 	debug("Physical memory size %llu\n", _dwMemAvailPhys);
 	debug("Available physical memory %llu\n", size);
-#else
+#elif !defined(PSP2)
  	struct sysinfo systemInfo;
 	sysinfo(&systemInfo);
 	_dwMemAvailPhys = systemInfo.freeram;
@@ -830,12 +836,14 @@ psSelectDevice()
 	return TRUE;
 }
 
+#if !defined(PSP2)
 void keypressCB(GLFWwindow* window, int key, int scancode, int action, int mods);
 void resizeCB(GLFWwindow* window, int width, int height);
 void scrollCB(GLFWwindow* window, double xoffset, double yoffset);
 void cursorCB(GLFWwindow* window, double xpos, double ypos);
 void cursorEnterCB(GLFWwindow* window, int entered);
 void joysChangeCB(int jid, int event);
+#endif
 
 bool IsThisJoystickBlacklisted(int i)
 {
@@ -883,7 +891,9 @@ void _InputInitialiseJoys()
 
 long _InputInitialiseMouse()
 {
+#if !defined(PSP2)
 	glfwSetInputMode(PSGLOBAL(window), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+#endif
 	return 0;
 }
 
@@ -892,18 +902,22 @@ void psPostRWinit(void)
 	RwVideoMode vm;
 	RwEngineGetVideoModeInfo(&vm, GcurSelVM);
 
+#if !defined(PSP2)
 	glfwSetKeyCallback(PSGLOBAL(window), keypressCB);
 	glfwSetWindowSizeCallback(PSGLOBAL(window), resizeCB);
 	glfwSetScrollCallback(PSGLOBAL(window), scrollCB);
 	glfwSetCursorPosCallback(PSGLOBAL(window), cursorCB);
 	glfwSetCursorEnterCallback(PSGLOBAL(window), cursorEnterCB);
 	glfwSetJoystickCallback(joysChangeCB);
+#endif
 
 	_InputInitialiseJoys();
 	_InputInitialiseMouse();
 
+#if !defined(PSP2)
 	if(!(vm.flags & rwVIDEOMODEEXCLUSIVE))
 		glfwSetWindowSize(PSGLOBAL(window), RsGlobal.maximumWidth, RsGlobal.maximumHeight);
+#endif
 
 	// Make sure all keys are released
 	CPad::GetPad(0)->Clear(true);
@@ -1202,7 +1216,7 @@ void HandleExit()
 #endif
 }
 
-#ifndef _WIN32
+#if defined(_WIN32) && !defined(PSP2)
 void terminateHandler(int sig, siginfo_t *info, void *ucontext) {
 	RsGlobal.quit = TRUE;
 }
@@ -1213,6 +1227,7 @@ void dummyHandler(int sig){
 
 #endif
 
+#if !defined(PSP2)
 void resizeCB(GLFWwindow* window, int width, int height) {
 	/*
 	* Handle event to ensure window contents are displayed during re-size
@@ -1403,14 +1418,18 @@ keypressCB(GLFWwindow* window, int key, int scancode, int action, int mods)
 		else if (action == GLFW_REPEAT) RsKeyboardEventHandler(rsKEYDOWN, &ks);
 	}
 }
+#endif
 
 // R* calls that in ControllerConfig, idk why
 void
 _InputTranslateShiftKeyUpDown(RsKeyCodes *rs) {
+#if !defined(PSP2)
 	RsKeyboardEventHandler(lshiftStatus ? rsKEYDOWN : rsKEYUP, &(*rs = rsLSHIFT));
 	RsKeyboardEventHandler(rshiftStatus ? rsKEYDOWN : rsKEYUP, &(*rs = rsRSHIFT));
+#endif
 }
 
+#if !defined(PSP2)
 // TODO this only works in frontend(and luckily only frontend use this). Fun fact: if I get pos manually in game, glfw reports that it's > 32000
 void
 cursorCB(GLFWwindow* window, double xpos, double ypos) {
@@ -1422,6 +1441,7 @@ void
 cursorEnterCB(GLFWwindow* window, int entered) {
 	PSGLOBAL(cursorIsInWindow) = !!entered;
 }
+#endif
 
 /*
  *****************************************************************************
@@ -1450,11 +1470,19 @@ WinMain(HINSTANCE instance,
 int
 main(int argc, char *argv[])
 {
+#ifdef PSP2
+	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
+	scePowerSetArmClockFrequency(444);
+	scePowerSetBusClockFrequency(222);
+	scePowerSetGpuClockFrequency(222);
+	scePowerSetGpuXbarClockFrequency(166);
+#endif
 #endif
 	RwV2d pos;
 	RwInt32 i;
 
-#ifndef _WIN32
+#if defined(_WIN32) && !defined(PSP2)
 	struct sigaction act;
 	act.sa_sigaction = terminateHandler;
 	act.sa_flags = SA_SIGINFO;
@@ -1505,7 +1533,9 @@ main(int argc, char *argv[])
 	openParams.width = RsGlobal.maximumWidth;
 	openParams.height = RsGlobal.maximumHeight;
 	openParams.windowtitle = RsGlobal.appName;
+#if !defined(PSP2)
 	openParams.window = &PSGLOBAL(window);
+#endif
 	
 	ControlsManager.MakeControllerActionsBlank();
 	ControlsManager.InitDefaultControlConfiguration();
@@ -1611,7 +1641,9 @@ main(int argc, char *argv[])
 #endif
 	}
 	
+#if !defined(PSP2)
 	initkeymap();
+#endif
 
 	while ( TRUE )
 	{
@@ -1642,7 +1674,9 @@ main(int argc, char *argv[])
 		while( !RsGlobal.quit && !FrontEndMenuManager.m_bWantToRestart && !glfwWindowShouldClose(PSGLOBAL(window)))
 #endif
 		{
+#if !defined(PSP2)
 			glfwPollEvents();
+#endif
 			if( ForegroundApp )
 			{
 				switch ( gGameState )
@@ -1774,8 +1808,10 @@ main(int argc, char *argv[])
 					
 					case GS_FRONTEND:
 					{
+#if !defined(PSP2)
 						if(!glfwGetWindowAttrib(PSGLOBAL(window), GLFW_ICONIFIED))
 							RsEventHandler(rsFRONTENDIDLE, nil);
+#endif
 
 #ifdef PS2_MENU
 						if ( !FrontEndMenuManager.m_bMenuActive || TheMemoryCard.m_bWantToLoad )
@@ -2086,6 +2122,7 @@ void CapturePad(RwInt32 padID)
 	return;
 }
 
+#if !defined(PSP2)
 void joysChangeCB(int jid, int event)
 {
 	if (event == GLFW_CONNECTED && !IsThisJoystickBlacklisted(jid)) {
@@ -2104,6 +2141,7 @@ void joysChangeCB(int jid, int event)
 			PSGLOBAL(joy2id) = -1;
 	}
 }
+#endif
 
 #if (defined(_MSC_VER))
 int strcasecmp(const char* str1, const char* str2)

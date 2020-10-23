@@ -411,6 +411,7 @@ inline void SkipSaveBuf(uint8 *&buf, int32 skip)
 #endif
 }
 
+#if !defined(PSP2)
 template<typename T>
 inline const T ReadSaveBuf(uint8 *&buf)
 {
@@ -427,7 +428,25 @@ inline T *WriteSaveBuf(uint8 *&buf, const T &value)
 	SkipSaveBuf(buf, sizeof(T));
 	return p;
 }
+#else
+template<typename T>
+inline __attribute__((optimize("O0"))) const T ReadSaveBuf(uint8 *&buf)
+{
+	T value;
+	memcpy_neon(&value, buf, sizeof(T));
+	SkipSaveBuf(buf, sizeof(T));
+	return value;
+}
 
+template<typename T>
+inline __attribute__((optimize("O0"))) T *WriteSaveBuf(uint8 *&buf, const T &value)
+{
+	T *p = (T*)buf;
+	memcpy_neon(p, &value, sizeof(T));
+	SkipSaveBuf(buf, sizeof(T));
+	return p;
+}
+#endif
 
 #define SAVE_HEADER_SIZE (4*sizeof(char)+sizeof(uint32))
 

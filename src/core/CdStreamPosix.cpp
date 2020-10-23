@@ -7,12 +7,16 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/time.h>
+#if !defined(PSP2)
 #include <sys/statvfs.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/resource.h>
+#if !defined(PSP2)
 #include <sys/syscall.h>
+#endif
 
 #include "CdStream.h"
 #include "rwcore.h"
@@ -22,6 +26,9 @@
 #define CDTRACE(f, ...)   printf("%s: " f "\n", "cdvd_stream", ## __VA_ARGS__)
 
 // #define ONE_THREAD_PER_CHANNEL // Don't use if you're not on SSD/Flash. (Also you may want to benefit from this via using all channels in Streaming.cpp)
+#ifdef PSP2
+#define ONE_THREAD_PER_CHANNEL
+#endif
 
 bool flushStream[MAX_CDCHANNELS];
 
@@ -76,10 +83,18 @@ CdStreamInitThread(void)
 	gChannelRequestQ.tail = 0;
 	gChannelRequestQ.size = gNumChannels + 1;
 	ASSERT(gChannelRequestQ.items != nil );
+#if !defined(PSP2)
 	gCdStreamSema = sem_open("/semaphore_cd_stream", O_CREAT, 0644, 1);
 
 
 	if (gCdStreamSema == SEM_FAILED) {
+#else
+	gCdStreamSema = (sem_t *)malloc(sizeof(sem_t));
+	status = sem_init(gCdStreamSema, 0, 0);
+
+
+	if (status == -1) {
+#endif
 		CDTRACE("failed to create stream semaphore");
 		ASSERT(0);
 		return;
@@ -90,20 +105,34 @@ CdStreamInitThread(void)
 	{
 		for ( int32 i = 0; i < gNumChannels; i++ )
 		{
+#if !defined(PSP2)
 			sprintf(semName,"/semaphore_done%d",i);
 			gpReadInfo[i].pDoneSemaphore = sem_open(semName, O_CREAT, 0644, 1);
 
 			if (gpReadInfo[i].pDoneSemaphore == SEM_FAILED)
+#else
+			gpReadInfo[i].pDoneSemaphore = (sem_t *)malloc(sizeof(sem_t));
+			status = sem_init(gpReadInfo[i].pDoneSemaphore, 0, 0);
+
+			if (status == -1)
+#endif
 			{
 				CDTRACE("failed to create sync semaphore");
 				ASSERT(0);
 				return;
 			}
 #ifdef ONE_THREAD_PER_CHANNEL
+#if !defined(PSP2)
 			sprintf(semName,"/semaphore_start%d",i);
 			gpReadInfo[i].pStartSemaphore = sem_open(semName, O_CREAT, 0644, 1);
 
 			if (gpReadInfo[i].pStartSemaphore == SEM_FAILED)
+#else
+			gpReadInfo[i].pStartSemaphore = (sem_t *)malloc(sizeof(sem_t));
+			status = sem_init(gpReadInfo[i].pStartSemaphore, 0, 0);
+
+			if (status == -1)
+#endif
 			{
 				CDTRACE("failed to create start semaphore");
 				ASSERT(0);
@@ -143,6 +172,7 @@ CdStreamInitThread(void)
 void
 CdStreamInit(int32 numChannels)
 {
+#if !defined(PSP2)
 	struct statvfs fsInfo;
 
 	if((statvfs("models/gta3.img", &fsInfo)) < 0)
@@ -151,6 +181,7 @@ CdStreamInit(int32 numChannels)
 		ASSERT(0);
 		return;
 	}
+#endif
 #ifdef __linux__
 	_gdwCdStreamFlags = O_RDONLY | O_NOATIME;
 #else
@@ -164,7 +195,11 @@ CdStreamInit(int32 numChannels)
 		debug("Using no buffered loading for streaming\n");
 	}
 */
+#if !defined(PSP2)
 	void *pBuffer = (void *)RwMallocAlign(CDSTREAM_SECTOR_SIZE, (RwUInt32)fsInfo.f_bsize);
+#else
+	void *pBuffer = (void *)RwMallocAlign(CDSTREAM_SECTOR_SIZE, CDSTREAM_SECTOR_SIZE);
+#endif
 	ASSERT( pBuffer != nil );
 
 	gNumImages = 0;
@@ -451,6 +486,7 @@ void *CdStreamThread(void *param)
 	}
 	char semName[20];
 #ifndef ONE_THREAD_PER_CHANNEL
+#if !defined(PSP2)
 	for ( int32 i = 0; i < gNumChannels; i++ )
 	{
 		sem_close(gpReadInfo[i].pDoneSemaphore);
@@ -459,8 +495,18 @@ void *CdStreamThread(void *param)
 	}
 	sem_close(gCdStreamSema);
 	sem_unlink("/semaphore_cd_stream");
+#else
+	for ( int32 i = 0; i < gNumChannels; i++ )
+	{
+		sem_destroy(gpReadInfo[i].pDoneSemaphore);
+		free(gpReadInfo[i].pDoneSemaphore);
+	}
+	sem_destroy(gCdStreamSema);
+	free(gCdStreamSema);
+#endif
 	free(gChannelRequestQ.items);
 #else
+#if !defined(PSP2)
 	sem_close(gpReadInfo[channel].pStartSemaphore);
 	sprintf(semName,"/semaphore_start%d",channel);
 	sem_unlink(semName);
@@ -468,6 +514,12 @@ void *CdStreamThread(void *param)
 	sem_close(gpReadInfo[channel].pDoneSemaphore);
 	sprintf(semName,"/semaphore_done%d",channel);
 	sem_unlink(semName);
+#else
+	sem_destroy(gpReadInfo[channel].pStartSemaphore);
+	sem_destroy(gpReadInfo[channel].pDoneSemaphore);
+	free(gpReadInfo[channel].pStartSemaphore);
+	free(gpReadInfo[channel].pDoneSemaphore);
+#endif
 #endif
 	if (gpReadInfo)
 		free(gpReadInfo);

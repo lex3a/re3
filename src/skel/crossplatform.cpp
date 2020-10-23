@@ -1,6 +1,295 @@
 #include "common.h"
 #include "crossplatform.h"
 
+#ifdef PSP2
+/*int printf(const char *format, ...)
+{
+	va_list list;
+	char string[512];
+
+	va_start(list, format);
+	vsnprintf(string, sizeof(string), format, list);
+	va_end(list);
+
+	SceUID fd = sceIoOpen("ux0:data/gta3.txt", SCE_O_WRONLY | SCE_O_CREAT | SCE_O_APPEND, 0777);
+	if (fd >= 0) {
+		sceIoWrite(fd, string, strlen(string));
+		sceIoClose(fd);
+	}
+
+	return 0;
+}*/
+
+static unsigned char gButtons[GLFW_GAMEPAD_BUTTON_LAST+1];
+static float gAxes[GLFW_GAMEPAD_AXIS_LAST+1];
+
+unsigned char* glfwGetJoystickButtons(int jid, int* count)
+{
+	SceCtrlData pad;
+	SceTouchData touch;
+	sceCtrlPeekBufferPositive(0, &pad, 1);
+	sceTouchPeek(0, &touch, 1);
+	gButtons[GLFW_GAMEPAD_BUTTON_CROSS]        = pad.buttons & SCE_CTRL_CROSS    ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_CIRCLE]       = pad.buttons & SCE_CTRL_CIRCLE   ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_SQUARE]       = pad.buttons & SCE_CTRL_SQUARE   ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_TRIANGLE]     = pad.buttons & SCE_CTRL_TRIANGLE ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]  = pad.buttons & SCE_CTRL_LTRIGGER ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] = pad.buttons & SCE_CTRL_RTRIGGER ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_BACK]         = pad.buttons & SCE_CTRL_SELECT   ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_START]        = pad.buttons & SCE_CTRL_START    ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_GUIDE]        = GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB]   = GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB]  = GLFW_RELEASE;
+	for (int i = 0; i < touch.reportNum; i++) {
+		if (touch.report[i].y > 1088/2) {
+			if (touch.report[i].x < 1920/2)
+				gButtons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB]  = GLFW_PRESS;
+			else
+				gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB] = GLFW_PRESS;
+		}
+	}
+	gButtons[GLFW_GAMEPAD_BUTTON_DPAD_UP]      = pad.buttons & SCE_CTRL_UP       ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT]   = pad.buttons & SCE_CTRL_RIGHT    ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN]    = pad.buttons & SCE_CTRL_DOWN     ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT]    = pad.buttons & SCE_CTRL_LEFT     ? GLFW_PRESS : GLFW_RELEASE;
+	if (count)
+		*count = GLFW_GAMEPAD_BUTTON_LAST+1;
+	return gButtons;
+}
+
+float* glfwGetJoystickAxes(int jid, int* count)
+{
+	SceCtrlData pad;
+	SceTouchData touch;
+	sceCtrlPeekBufferPositive(0, &pad, 1);
+	sceTouchPeek(0, &touch, 1);
+	gAxes[GLFW_GAMEPAD_AXIS_LEFT_X]        = ((float)pad.lx - 128.0f) / 128.0f;
+	gAxes[GLFW_GAMEPAD_AXIS_LEFT_Y]        = ((float)pad.ly - 128.0f) / 128.0f;
+	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_X]       = ((float)pad.rx - 128.0f) / 128.0f;
+	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_Y]       = ((float)pad.ry - 128.0f) / 128.0f;
+	gAxes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]  = -1.0f;
+	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = -1.0f;
+	for (int i = 0; i < touch.reportNum; i++) {
+		if (touch.report[i].y < 1088/2) {
+			if (touch.report[i].x < 1920/2)
+				gAxes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]  = 1.0f;
+			else
+				gAxes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = 1.0f;
+		}
+	}
+	if (count)
+		*count = GLFW_GAMEPAD_AXIS_LAST+1;
+	return gAxes;
+}
+
+int glfwGetGamepadState(int jid, GLFWgamepadstate* state)
+{
+	unsigned char *buttons = glfwGetJoystickButtons(jid, NULL);
+	float *axes = glfwGetJoystickAxes(jid, NULL);
+	memcpy(state->buttons, buttons, sizeof(state->buttons));
+	memcpy(state->axes, axes, sizeof(state->axes));
+	return 1;
+}
+
+int glfwJoystickPresent(int jid)
+{
+	return 1;
+}
+
+int glfwJoystickIsGamepad(int jid)
+{
+	return 1;
+}
+
+int glfwGetKey(GLFWwindow* window, int key)
+{
+	return GLFW_RELEASE;
+}
+
+int glfwGetMouseButton(GLFWwindow* window, int button)
+{
+	return GLFW_RELEASE;
+}
+
+void glfwGetCursorPos(GLFWwindow* window, double* xpos, double* ypos)
+{
+	if (xpos)
+		*xpos = 0;
+	if (ypos)
+		*ypos = 0;
+	return;
+}
+
+void glfwSetCursorPos(GLFWwindow* window, double xpos, double ypos)
+{
+	return;
+}
+
+const char* glfwGetJoystickName(int jid)
+{
+	return "";
+}
+
+int glfwWindowShouldClose(GLFWwindow* window)
+{
+	return 0;
+}
+
+GLFWmonitor* glfwGetPrimaryMonitor(void)
+{
+	return NULL;
+}
+
+static GLFWvidmode gVideoMode { .width = 960, .height = 544 };
+const GLFWvidmode* glfwGetVideoMode(GLFWmonitor* monitor)
+{
+	return &gVideoMode;
+}
+
+int clock_gettime(int clk_id, struct timespec *tp)
+{
+	if (clk_id == CLOCK_MONOTONIC)
+	{
+		SceKernelSysClock ticks;
+		sceKernelGetProcessTime(&ticks);
+
+		tp->tv_sec = ticks / (1000 * 1000);
+		tp->tv_nsec = (ticks * 1000) % (1000 * 1000 * 1000);
+
+		return 0;
+	}
+	else if (clk_id == CLOCK_REALTIME)
+	{
+		time_t seconds;
+		SceDateTime time;
+		sceRtcGetCurrentClockLocalTime(&time);
+
+		sceRtcGetTime_t(&time, &seconds);
+
+		tp->tv_sec = seconds;
+		tp->tv_nsec = time.microsecond * 1000;
+
+		return 0;
+	}
+
+	return -ENOSYS;
+}
+
+int lstat(const char *path, struct stat *buf)
+{
+	debug("lstat %s\n", path);
+	return stat(path, buf);
+}
+
+char *realpath(const char *path, char *resolved_path)
+{
+	char data_path[PATH_MAX];
+	getcwd(data_path, sizeof(data_path));
+
+	if (strncmp(path, "ux0:", 4) == 0)
+	{
+		strcpy(resolved_path, path);
+	}
+	else
+	{
+		sprintf(resolved_path, "%s/%s", data_path, path);
+	}
+	debug("realpath %s -> %s\n", path, resolved_path);
+	return resolved_path;
+}
+
+ssize_t readlink(const char *path, char *buf, size_t bufsiz)
+{
+	debug("readlink %s\n", path);
+	return 0;
+}
+
+char cur_dir[PATH_MAX] = "ux0:data/gta3";
+char *getcwd(char *buf, size_t size)
+{
+	if (buf != NULL)
+	{
+		strncpy(buf, cur_dir, size);
+	}
+	return cur_dir;
+}
+
+int chdir(const char *path)
+{
+	if (strncmp(path, "ux0:", 4) == 0)
+	{
+		strcpy(cur_dir, path);
+	}
+	else
+	{
+		sprintf(cur_dir, "%s/%s", cur_dir, path);
+	}
+	debug("chdir %s -> %s\n", path, cur_dir);
+	return 0;
+}
+
+int mkdir(const char *pathname, mode_t mode)
+{
+	debug("mkdir %s\n", pathname);
+	return sceIoMkdir(pathname, mode);
+}
+
+HANDLE FindFirstFile(const char* pathname, WIN32_FIND_DATA* firstfile) {
+	char newpathname[64];
+	snprintf(newpathname, sizeof(newpathname), "ux0:data/gta3/%s", pathname);
+	char* path = strtok(newpathname, "\\*");
+	strncpy(firstfile->folder, path, sizeof(firstfile->folder));
+
+	// Both w/ extension and w/o extension is ok
+	if (strlen(path) + 2 != strlen(pathname))
+		strncpy(firstfile->extension, strtok(NULL, "\\*"), sizeof(firstfile->extension));
+	else
+		strncpy(firstfile->extension, "", sizeof(firstfile->extension));
+
+	HANDLE d;
+	if ((d = (HANDLE)opendir(path)) == NULL || !FindNextFile(d, firstfile))
+		return NULL;
+
+	return d;
+}
+
+bool FindNextFile(HANDLE d, WIN32_FIND_DATA* finddata) {
+	dirent *file;
+	static struct stat fileStats;
+	static char path[PATH_MAX], relativepath[NAME_MAX + sizeof(finddata->folder) + 1];
+	int extensionLen = strlen(finddata->extension);
+	while ((file = readdir((DIR*)d)) != NULL) {
+
+		if ((extensionLen == 0 || strncmp(&file->d_name[strlen(file->d_name) - extensionLen], finddata->extension, extensionLen) == 0)) {
+
+			sprintf(relativepath, "%s/%s", finddata->folder, file->d_name);
+			realpath(relativepath, path);
+			stat(path, &fileStats);
+			strncpy(finddata->cFileName, file->d_name, sizeof(finddata->cFileName));
+			finddata->ftLastWriteTime = fileStats.st_mtime;
+			return true;
+		}
+	}
+	return false;
+}
+
+char* casepath(char const* path, bool checkPathFirst)
+{
+	char* out = (char*)malloc(PATH_MAX);
+	realpath(path, out);
+
+	size_t l = strlen(out);
+	for (int i = l-1; i >= 0; i--) {
+		if (out[i] == '\\' || out[i] == '/' || out[i] == ' ')
+			out[i] = '\0';
+		else
+			break;
+	}
+
+	return out;
+}
+#endif
+
 // Codes compatible with Windows and Linux
 #ifndef _WIN32
 
@@ -24,7 +313,7 @@ void GetLocalTime_CP(SYSTEMTIME *out) {
 #endif
 
 // Compatible with Linux/POSIX and MinGW on Windows
-#ifndef _WIN32
+#if defined(_WIN32) && !defined(PSP2)
 HANDLE FindFirstFile(const char* pathname, WIN32_FIND_DATA* firstfile) {
 	char pathCopy[MAX_PATH];
 	strcpy(pathCopy, pathname);
@@ -81,7 +370,9 @@ bool FindNextFile(HANDLE d, WIN32_FIND_DATA* finddata) {
 	}
 	return false;
 }
+#endif
 
+#ifndef _WIN32
 void GetDateFormat(int unused1, int unused2, SYSTEMTIME* in, int unused3, char* out, int size) {
 	tm linuxTime;
 	linuxTime.tm_year = in->wYear - 1900;
@@ -150,11 +441,13 @@ FILE* _fcaseopen(char const* filename, char const* mode)
         result = fopen(filename, mode);
     else {
         result = fopen(real, mode);
+        debug("fopen %s -> %p\n", real, result);
         free(real);
     }
     return result;
 }
 
+#if !defined(PSP2)
 // Case-insensitivity on linux (from https://github.com/OneSadCookie/fcaseopen)
 // Returned string should freed manually (if exists)
 char* casepath(char const* path, bool checkPathFirst)
@@ -255,4 +548,5 @@ char* casepath(char const* path, bool checkPathFirst)
     }
     return out;
 }
+#endif
 #endif

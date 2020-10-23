@@ -3,6 +3,7 @@
 
 #ifdef AUDIO_OAL
 
+#if !defined(PSP2)
 LPALGENEFFECTS alGenEffects;
 LPALDELETEEFFECTS alDeleteEffects;
 LPALISEFFECT alIsEffect;
@@ -36,10 +37,12 @@ LPALGETFILTERI alGetFilteri;
 LPALGETFILTERIV alGetFilteriv;
 LPALGETFILTERF alGetFilterf;
 LPALGETFILTERFV alGetFilterfv;
+#endif
 
 
 void EFXInit()
 {
+#if !defined(PSP2)
 	/* Define a macro to help load the function pointers. */
 #define LOAD_PROC(T, x)  ((x) = (T)alGetProcAddress(#x))
 	LOAD_PROC(LPALGENEFFECTS, alGenEffects);
@@ -78,6 +81,7 @@ void EFXInit()
 	LOAD_PROC(LPALGETAUXILIARYEFFECTSLOTF, alGetAuxiliaryEffectSlotf);
 	LOAD_PROC(LPALGETAUXILIARYEFFECTSLOTFV, alGetAuxiliaryEffectSlotfv);
 #undef LOAD_PROC
+#endif
 }
 
 void SetEffectsLevel(ALuint uiFilter, float level)
