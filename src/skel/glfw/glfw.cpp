@@ -1810,8 +1810,8 @@ main(int argc, char *argv[])
 					{
 #if !defined(PSP2)
 						if(!glfwGetWindowAttrib(PSGLOBAL(window), GLFW_ICONIFIED))
-							RsEventHandler(rsFRONTENDIDLE, nil);
 #endif
+							RsEventHandler(rsFRONTENDIDLE, nil);
 
 #ifdef PS2_MENU
 						if ( !FrontEndMenuManager.m_bMenuActive || TheMemoryCard.m_bWantToLoad )
