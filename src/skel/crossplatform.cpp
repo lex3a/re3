@@ -20,6 +20,11 @@
 	return 0;
 }*/
 
+void *memcpy(void *dest, const void *src, size_t n)
+{
+	return memcpy_neon(dest, src, n);
+}
+
 static unsigned char gButtons[GLFW_GAMEPAD_BUTTON_LAST+1];
 static float gAxes[GLFW_GAMEPAD_AXIS_LAST+1];
 
