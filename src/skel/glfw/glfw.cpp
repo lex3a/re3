@@ -1471,7 +1471,7 @@ int
 main(int argc, char *argv[])
 {
 #ifdef PSP2
-	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
+	sceCtrlSetSamplingModeExt(SCE_CTRL_MODE_ANALOG_WIDE);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
 	scePowerSetArmClockFrequency(444);
 	scePowerSetBusClockFrequency(222);

@@ -207,7 +207,7 @@ enum Config {
 // #define PS2_ALPHA_TEST		// emulate ps2 alpha test 
 #define IMPROVED_VIDEOMODE	// save and load videomode parameters instead of a magic number
 #define DISABLE_LOADING_SCREEN // disable the loading screen which vastly improves the loading time
-#define NO_ISLAND_LOADING  // disable loadscreen between islands via loading all island data at once, consumes more memory and CPU
+// #define NO_ISLAND_LOADING  // disable loadscreen between islands via loading all island data at once, consumes more memory and CPU
 //#define USE_TEXTURE_POOL
 #define CUTSCENE_BORDERS_SWITCH
 //#define EXTENDED_COLOURFILTER		// more options for colour filter (replaces mblur)
@@ -249,8 +249,8 @@ enum Config {
 #else
 #	define MENU_MAP			// VC-like menu map. Make sure you have new menu.txd
 #	define SCROLLABLE_STATS_PAGE	// only draggable by mouse atm
-#	define TRIANGLE_BACK_BUTTON
-//#	define CIRCLE_BACK_BUTTON
+//#	define TRIANGLE_BACK_BUTTON
+#	define CIRCLE_BACK_BUTTON
 //#	define PS2_LIKE_MENU	// An effort to recreate PS2 menu, cycling through tabs, different bg etc.
 //#	define PS2_SAVE_DIALOG		// PS2 style save dialog with transparent black box
 #	define CUSTOM_FRONTEND_OPTIONS

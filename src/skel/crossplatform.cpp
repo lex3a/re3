@@ -27,14 +27,14 @@ unsigned char* glfwGetJoystickButtons(int jid, int* count)
 {
 	SceCtrlData pad;
 	SceTouchData touch;
-	sceCtrlPeekBufferPositive(0, &pad, 1);
+	sceCtrlPeekBufferPositiveExt2(0, &pad, 1);
 	sceTouchPeek(0, &touch, 1);
 	gButtons[GLFW_GAMEPAD_BUTTON_CROSS]        = pad.buttons & SCE_CTRL_CROSS    ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_CIRCLE]       = pad.buttons & SCE_CTRL_CIRCLE   ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_SQUARE]       = pad.buttons & SCE_CTRL_SQUARE   ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_TRIANGLE]     = pad.buttons & SCE_CTRL_TRIANGLE ? GLFW_PRESS : GLFW_RELEASE;
-	gButtons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]  = pad.buttons & SCE_CTRL_LTRIGGER ? GLFW_PRESS : GLFW_RELEASE;
-	gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] = pad.buttons & SCE_CTRL_RTRIGGER ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]  = pad.buttons & SCE_CTRL_L1       ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] = pad.buttons & SCE_CTRL_R1       ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_BACK]         = pad.buttons & SCE_CTRL_SELECT   ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_START]        = pad.buttons & SCE_CTRL_START    ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_GUIDE]        = GLFW_RELEASE;
@@ -61,7 +61,7 @@ float* glfwGetJoystickAxes(int jid, int* count)
 {
 	SceCtrlData pad;
 	SceTouchData touch;
-	sceCtrlPeekBufferPositive(0, &pad, 1);
+	sceCtrlPeekBufferPositiveExt2(0, &pad, 1);
 	sceTouchPeek(0, &touch, 1);
 	gAxes[GLFW_GAMEPAD_AXIS_LEFT_X]        = ((float)pad.lx - 128.0f) / 128.0f;
 	gAxes[GLFW_GAMEPAD_AXIS_LEFT_Y]        = ((float)pad.ly - 128.0f) / 128.0f;
@@ -86,8 +86,8 @@ int glfwGetGamepadState(int jid, GLFWgamepadstate* state)
 {
 	unsigned char *buttons = glfwGetJoystickButtons(jid, NULL);
 	float *axes = glfwGetJoystickAxes(jid, NULL);
-	memcpy(state->buttons, buttons, sizeof(state->buttons));
-	memcpy(state->axes, axes, sizeof(state->axes));
+	memcpy_neon(state->buttons, buttons, sizeof(state->buttons));
+	memcpy_neon(state->axes, axes, sizeof(state->axes));
 	return 1;
 }
 
@@ -235,19 +235,36 @@ int mkdir(const char *pathname, mode_t mode)
 }
 
 HANDLE FindFirstFile(const char* pathname, WIN32_FIND_DATA* firstfile) {
-	char newpathname[64];
-	snprintf(newpathname, sizeof(newpathname), "ux0:data/gta3/%s", pathname);
-	char* path = strtok(newpathname, "\\*");
-	strncpy(firstfile->folder, path, sizeof(firstfile->folder));
+	char pathCopy[MAX_PATH];
+	snprintf(pathCopy, sizeof(pathCopy), "ux0:data/gta3/%s", pathname);
+	debug("FindFirstFile %s\n", pathname);
 
-	// Both w/ extension and w/o extension is ok
-	if (strlen(path) + 2 != strlen(pathname))
-		strncpy(firstfile->extension, strtok(NULL, "\\*"), sizeof(firstfile->extension));
+	char *folder = strtok(pathCopy, "*");
+	char *extension = strtok(NULL, "*");
+
+	// because strtok doesn't return NULL for last delimiter
+	if (extension - folder == strlen(pathname))
+		extension = nil;
+	
+	// Case-sensitivity and backslashes...
+	// Will be freed at the bottom
+	char *realFolder = casepath(folder);
+	if (realFolder) {
+		folder = realFolder;
+	}
+
+	strncpy(firstfile->folder, folder, sizeof(firstfile->folder));
+
+	if (extension)
+		strncpy(firstfile->extension, extension, sizeof(firstfile->extension));
 	else
-		strncpy(firstfile->extension, "", sizeof(firstfile->extension));
+		firstfile->extension[0] = '\0';
+
+	if (realFolder)
+		free(realFolder);
 
 	HANDLE d;
-	if ((d = (HANDLE)opendir(path)) == NULL || !FindNextFile(d, firstfile))
+	if ((d = (HANDLE)opendir(firstfile->folder)) == NULL || !FindNextFile(d, firstfile))
 		return NULL;
 
 	return d;
@@ -260,10 +277,12 @@ bool FindNextFile(HANDLE d, WIN32_FIND_DATA* finddata) {
 	int extensionLen = strlen(finddata->extension);
 	while ((file = readdir((DIR*)d)) != NULL) {
 
-		if ((extensionLen == 0 || strncmp(&file->d_name[strlen(file->d_name) - extensionLen], finddata->extension, extensionLen) == 0)) {
+		// We only want "DT_REG"ular Files, but reportedly some FS and OSes gives DT_UNKNOWN as type.
+		if (extensionLen == 0 || strncasecmp(&file->d_name[strlen(file->d_name) - extensionLen], finddata->extension, extensionLen) == 0) {
 
 			sprintf(relativepath, "%s/%s", finddata->folder, file->d_name);
 			realpath(relativepath, path);
+			debug("FindNextFile %s\n", path);
 			stat(path, &fileStats);
 			strncpy(finddata->cFileName, file->d_name, sizeof(finddata->cFileName));
 			finddata->ftLastWriteTime = fileStats.st_mtime;
