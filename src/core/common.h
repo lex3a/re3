@@ -442,7 +442,7 @@ template<typename T>
 inline __attribute__((optimize("O0"))) T *WriteSaveBuf(uint8 *&buf, const T &value)
 {
 	T *p = (T*)buf;
-	memcpy_neon(p, &value, sizeof(T));
+	memcpy_neon(buf, &value, sizeof(T));
 	SkipSaveBuf(buf, sizeof(T));
 	return p;
 }

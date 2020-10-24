@@ -93,12 +93,12 @@ int glfwGetGamepadState(int jid, GLFWgamepadstate* state)
 
 int glfwJoystickPresent(int jid)
 {
-	return 1;
+	return jid == 0;
 }
 
 int glfwJoystickIsGamepad(int jid)
 {
-	return 1;
+	return jid == 0;
 }
 
 int glfwGetKey(GLFWwindow* window, int key)
@@ -114,9 +114,9 @@ int glfwGetMouseButton(GLFWwindow* window, int button)
 void glfwGetCursorPos(GLFWwindow* window, double* xpos, double* ypos)
 {
 	if (xpos)
-		*xpos = 0;
+		*xpos = 0.0f;
 	if (ypos)
-		*ypos = 0;
+		*ypos = 0.0f;
 	return;
 }
 
@@ -127,7 +127,7 @@ void glfwSetCursorPos(GLFWwindow* window, double xpos, double ypos)
 
 const char* glfwGetJoystickName(int jid)
 {
-	return "";
+	return "Vita Pad";
 }
 
 int glfwWindowShouldClose(GLFWwindow* window)

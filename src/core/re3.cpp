@@ -403,12 +403,8 @@ CustomFrontendOptionsPopulate(void)
 	CLONE_OPTION(TheText.Get("FED_TRA"), MENUACTION_TRAILS, nil, nil);
 #ifdef PSP2
 	SWITCH_TO_GRAPHICS_MENU
-	char postfx_voice[7];
 	wchar wpostfx_voice[7];
-	strcpy(postfx_voice, "POSTFX");
-	for(int i = 0; i < 7; i++)
-		wpostfx_voice[i] = postfx_voice[i];
-	wpostfx_voice[6] = 0;
+	AsciiToUnicode("POSTFX", wpostfx_voice);
 	FrontendOptionAddSelect(wpostfx_voice, off_on, 2, (int8*)&gPostFX, false, PostFXChange, nil, postfxKey);
 #endif
 #ifdef PS2_ALPHA_TEST
