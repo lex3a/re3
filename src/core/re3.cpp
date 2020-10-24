@@ -38,6 +38,10 @@
 #include <stdarg.h>
 #endif
 
+#ifdef PSP2
+extern bool gPostFX;
+#endif
+
 #ifdef RWLIBS
 extern "C" int vsprintf(char* const _Buffer, char const* const _Format, va_list  _ArgList);
 #endif
@@ -84,6 +88,9 @@ void RestoreDefGraphics(int8 action) {
 
 	#ifdef PS2_ALPHA_TEST
 		gPS2alphaTest = false;
+	#endif
+	#ifdef PSP2
+		gPostFX = false;
 	#endif
 	#ifdef MULTISAMPLING
 		FrontEndMenuManager.m_nPrefsMSAALevel = FrontEndMenuManager.m_nDisplayMSAALevel = 0;
@@ -265,7 +272,14 @@ void PS2AlphaTestChange(int8 displayedValue)
 }
 const char* ps2alphaKey = "PS2AlphaTest";
 #endif
-
+#ifdef PSP2
+void PostFXChange(int8 displayedValue)
+{
+	gPostFX = !!displayedValue;
+	FrontEndMenuManager.SaveSettings();
+}
+const char* postfxKey = "PostFX";
+#endif
 #ifdef DONT_TRUST_RECOGNIZED_JOYSTICKS
 wchar selectedJoystickUnicode[128];
 
@@ -387,7 +401,16 @@ CustomFrontendOptionsPopulate(void)
 #endif
 
 	CLONE_OPTION(TheText.Get("FED_TRA"), MENUACTION_TRAILS, nil, nil);
-
+#ifdef PSP2
+	SWITCH_TO_GRAPHICS_MENU
+	char postfx_voice[7];
+	wchar wpostfx_voice[7];
+	strcpy(postfx_voice, "POSTFX");
+	for(int i = 0; i < 7; i++)
+		wpostfx_voice[i] = postfx_voice[i];
+	wpostfx_voice[6] = 0;
+	FrontendOptionAddSelect(wpostfx_voice, off_on, 2, (int8*)&gPostFX, false, PostFXChange, nil, postfxKey);
+#endif
 #ifdef PS2_ALPHA_TEST
 	SWITCH_TO_GRAPHICS_MENU
 	FrontendOptionAddSelect(TheText.Get("FEM_2PR"), off_on, 2, (int8*)&gPS2alphaTest, false, PS2AlphaTestChange, nil, ps2alphaKey);
