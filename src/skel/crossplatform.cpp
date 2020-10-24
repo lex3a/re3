@@ -148,8 +148,7 @@ const GLFWvidmode* glfwGetVideoMode(GLFWmonitor* monitor)
 
 int clock_gettime(int clk_id, struct timespec *tp)
 {
-	if (clk_id == CLOCK_MONOTONIC)
-	{
+	if (clk_id == CLOCK_MONOTONIC) {
 		SceKernelSysClock ticks;
 		sceKernelGetProcessTime(&ticks);
 
@@ -157,9 +156,7 @@ int clock_gettime(int clk_id, struct timespec *tp)
 		tp->tv_nsec = (ticks * 1000) % (1000 * 1000 * 1000);
 
 		return 0;
-	}
-	else if (clk_id == CLOCK_REALTIME)
-	{
+	} else if (clk_id == CLOCK_REALTIME) {
 		time_t seconds;
 		SceDateTime time;
 		sceRtcGetCurrentClockLocalTime(&time);
@@ -187,13 +184,9 @@ char *realpath(const char *path, char *resolved_path)
 	getcwd(data_path, sizeof(data_path));
 
 	if (strncmp(path, "ux0:", 4) == 0)
-	{
 		strcpy(resolved_path, path);
-	}
 	else
-	{
 		sprintf(resolved_path, "%s/%s", data_path, path);
-	}
 	debug("realpath %s -> %s\n", path, resolved_path);
 	return resolved_path;
 }
@@ -208,22 +201,16 @@ char cur_dir[PATH_MAX] = "ux0:data/gta3";
 char *getcwd(char *buf, size_t size)
 {
 	if (buf != NULL)
-	{
 		strncpy(buf, cur_dir, size);
-	}
 	return cur_dir;
 }
 
 int chdir(const char *path)
 {
 	if (strncmp(path, "ux0:", 4) == 0)
-	{
 		strcpy(cur_dir, path);
-	}
 	else
-	{
 		sprintf(cur_dir, "%s/%s", cur_dir, path);
-	}
 	debug("chdir %s -> %s\n", path, cur_dir);
 	return 0;
 }
