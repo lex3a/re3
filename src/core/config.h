@@ -197,7 +197,7 @@ enum Config {
 
 #define FIX_BUGS		// fixes bugs that we've came across during reversing, TODO: use this more
 #define MORE_LANGUAGES		// Add more translations to the game
-// #define COMPATIBLE_SAVES // this allows changing structs while keeping saves compatible
+#define COMPATIBLE_SAVES // this allows changing structs while keeping saves compatible
 #define LOAD_INI_SETTINGS
 
 // Rendering/display

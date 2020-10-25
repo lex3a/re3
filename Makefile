@@ -16,7 +16,7 @@ PREFIX		=	arm-vita-eabi
 CC			=	$(PREFIX)-gcc
 CXX			=	$(PREFIX)-g++
 ARCH		:=	-mtune=cortex-a9 -march=armv7-a -mfpu=neon
-CFLAGS		:=	-g -Wl,-q -fno-optimize-sibling-calls -O2 -ftree-vectorize -mfloat-abi=hard -fno-builtin-memcpy $(ARCH) $(DEFINES)
+CFLAGS		:=	-g -Wl,-q,--no-enum-size-warning -fno-short-enums -fno-optimize-sibling-calls -O2 -ftree-vectorize -mfloat-abi=hard -fno-builtin-memcpy $(ARCH) $(DEFINES)
 CFLAGS		+=	$(INCLUDE) -DPSP2 -DMASTER -DFINAL -DLIBRW -DRW_GL3 -DAUDIO_OAL -DLIBRW_GLAD
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
 ASFLAGS		:=	-g $(ARCH)
