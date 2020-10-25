@@ -222,8 +222,18 @@ int chdir(const char *path)
 
 int mkdir(const char *pathname, mode_t mode)
 {
-	debug("mkdir %s\n", pathname);
-	return sceIoMkdir(pathname, mode);
+	char* real = casepath(pathname);
+	int result = sceIoMkdir(real, mode) < 0 ? -1 : 0;
+	free(real);
+	return result;
+}
+
+int unlink(const char *pathname)
+{
+	char* real = casepath(pathname);
+	int result = remove(real);
+	free(real);
+	return result;
 }
 
 HANDLE FindFirstFile(const char* pathname, WIN32_FIND_DATA* firstfile) {
