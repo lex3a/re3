@@ -7,7 +7,6 @@
 #include "sampman.h"
 #include "Font.h"
 #include "Text.h"
-#include "crossplatform.h"
 
 cDMAudio DMAudio;
 
@@ -111,33 +110,6 @@ char *
 cDMAudio::Get3DProviderName(uint8 id)
 {
 	return AudioManager.Get3DProviderName(id);
-}
-
-int8 cDMAudio::AutoDetect3DProviders(void)
-{
-	for ( int32 i = 0; i < GetNum3DProvidersAvailable(); i++ )
-	{
-		wchar buff[64];
-
-#ifdef AUDIO_OAL
-		if (defaultProvider >= 0 && defaultProvider < GetNum3DProvidersAvailable()) {
-			return i;
-		}
-#endif
-		char *name = Get3DProviderName(i);
-		AsciiToUnicode(name, buff);
-		char *providername = UnicodeToAscii(buff);
-		strupr(providername);
-#if defined(AUDIO_MSS)
-		if ( !strcmp(providername, "MILES FAST 2D POSITIONAL AUDIO") )
-			return i;
-#elif defined(AUDIO_OAL)
-		if ( !strcmp(providername, "OPENAL SOFT") )
-			return i;
-#endif
-	}
-
-	return -1;
 }
 
 int8
@@ -350,7 +322,7 @@ cDMAudio::SetRadioInCar(uint32 radio)
 }
 
 void
-cDMAudio::SetRadioChannel(int8 radio, int32 pos)
+cDMAudio::SetRadioChannel(uint8 radio, int32 pos)
 {
 	MusicManager.SetRadioChannelByScript(radio, pos);
 }

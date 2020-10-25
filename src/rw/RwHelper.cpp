@@ -446,12 +446,14 @@ CameraSize(RwCamera * camera, RwRect * rect,
 			if( raster )
 			{
 				RwRasterDestroy(raster);
+				camera->frameBuffer = nil;
 			}
 
 			zRaster = RwCameraGetZRaster(camera);
 			if( zRaster )
 			{
 				RwRasterDestroy(zRaster);
+				camera->zBuffer = nil;
 			}
 
 			/*
