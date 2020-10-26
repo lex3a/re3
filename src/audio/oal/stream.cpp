@@ -103,8 +103,6 @@ public:
 		}
 
 		m_bIsLoaded = true;
-		//memset(&m_soundInfo, 0, sizeof(m_soundInfo));
-		//m_pfSound = sf_open(path, SFM_READ, &m_soundInfo);
 	}
 
 	~CDrWav()
@@ -124,7 +122,6 @@ public:
 	uint32 GetSampleSize()
 	{
 		return drwav_get_bytes_per_pcm_frame(&m_drWav);
-		//return sizeof(uint16);
 	}
 	
 	uint32 GetSampleCount()
@@ -144,36 +141,28 @@ public:
 	
 	void Seek(uint32 milliseconds)
 	{
-		//if()
 		if ( !IsOpened() ) return;
-		drwav_seek_to_pcm_frame(&m_drWav, ms2samples(milliseconds));
-		//sf_seek(m_pfSound, ms2samples(milliseconds), SF_SEEK_SET);
+		drwav_seek_to_pcm_frame(&m_drWav, ms2samples(milliseconds) * (float)GetChannels());
 	}
 	
 	uint32 Tell()
 	{
 		if ( !IsOpened() ) return 0;
-		//return samples2ms(sf_seek(m_pfSound, 0, SF_SEEK_CUR));
 
 		if (drwav__is_compressed_format_tag(m_drWav.translatedFormatTag)) {
-			return samples2ms(m_drWav.compressed.iCurrentPCMFrame);
+			return samples2ms(m_drWav.compressed.iCurrentPCMFrame) / (float)GetChannels();
 		} else {
 			uint32 bytes_per_frame = GetSampleSize();
 			return samples2ms(
 				((m_drWav.totalPCMFrameCount * bytes_per_frame) - m_drWav.bytesRemaining) / bytes_per_frame
-			);
+			) / (float)GetChannels();
 		}
-		
-		//drwav_current
-		//return samples2ms(m_drWav.current)
-		//return samples2ms(drwav_seek_to_first_pcm_frame(&m_drWav));
 	}
 	
 	uint32 Decode(void *buffer)
 	{
 		if ( !IsOpened() ) return 0;
 		return drwav_read_raw(&m_drWav, GetBufferSize(), buffer);
-		//return sf_read_short(m_pfSound, (short *)buffer, GetBufferSamples()) * GetSampleSize();
 	}
 };
 #endif
