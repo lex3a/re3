@@ -1,7 +1,7 @@
 # re3-vita
 
-re3-vita is a port of [re3](https://github.com/GTAmodding/re3), a full reverse engineered reimplementation of Grand Theft Auto III using librw, a full and open source reimplementation of RenderWare graphics engine.
-re3-vita allows to play Grand Theft Auto III on PS Vita/PSTV after providing game files from your own copy of the game. (If you don't have a physical copy of GTA III for PC, you can buy the game on Steam (https://store.steampowered.com/app/12100/Grand_Theft_Auto_III/).
+re3-vita is a port of [re3](https://github.com/GTAmodding/re3), a full reverse engineered reimplementation of Grand Theft Auto III using librw, a full and open source reimplementation of RenderWare graphics engine.  
+re3-vita allows to play Grand Theft Auto III on PS Vita/PSTV after providing game files from your own copy of the game (if you don't have a physical copy of GTA III for PC, you can buy the game on Steam (https://store.steampowered.com/app/12100/Grand_Theft_Auto_III/).
 
 ## Downloads
 
