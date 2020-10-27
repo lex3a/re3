@@ -43,8 +43,8 @@ unsigned char* glfwGetJoystickButtons(int jid, int* count)
 	gButtons[GLFW_GAMEPAD_BUTTON_BACK]         = pad.buttons & SCE_CTRL_SELECT   ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_START]        = pad.buttons & SCE_CTRL_START    ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_GUIDE]        = GLFW_RELEASE;
-	gButtons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB]   = GLFW_RELEASE;
-	gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB]  = GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB]   = pad.buttons & SCE_CTRL_L3       ? GLFW_PRESS : GLFW_RELEASE;
+	gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB]  = pad.buttons & SCE_CTRL_R3       ? GLFW_PRESS : GLFW_RELEASE;
 	for (int i = 0; i < touch.reportNum; i++) {
 		if (touch.report[i].y > 1088/2) {
 			if (touch.report[i].x < 1920/2)
@@ -72,8 +72,8 @@ float* glfwGetJoystickAxes(int jid, int* count)
 	gAxes[GLFW_GAMEPAD_AXIS_LEFT_Y]        = ((float)pad.ly - 128.0f) / 128.0f;
 	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_X]       = ((float)pad.rx - 128.0f) / 128.0f;
 	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_Y]       = ((float)pad.ry - 128.0f) / 128.0f;
-	gAxes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]  = -1.0f;
-	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = -1.0f;
+	gAxes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]  = pad.buttons & SCE_CTRL_L2 ? 1.0f : -1.0f;
+	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = pad.buttons & SCE_CTRL_R2 ? 1.0f : -1.0f;
 	for (int i = 0; i < touch.reportNum; i++) {
 		if (touch.report[i].y < 1088/2) {
 			if (touch.report[i].x < 1920/2)
