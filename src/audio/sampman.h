@@ -157,11 +157,7 @@ public:
 	
 	bool Initialise(void);
 	void Terminate (void);
-	
-#ifdef AUDIO_OAL
-	void UpdateSoundBuffers(void);
-#endif
-	
+		
 	bool CheckForAnAudioFileOnCD(void);
 	char GetCDAudioDriveLetter  (void);
 	
