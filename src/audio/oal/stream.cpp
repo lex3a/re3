@@ -142,7 +142,7 @@ public:
 	void Seek(uint32 milliseconds)
 	{
 		if ( !IsOpened() ) return;
-		drwav_seek_to_pcm_frame(&m_drWav, ms2samples(milliseconds) * (float)GetChannels());
+		drwav_seek_to_pcm_frame(&m_drWav, ms2samples(milliseconds));
 	}
 	
 	uint32 Tell()
@@ -150,12 +150,12 @@ public:
 		if ( !IsOpened() ) return 0;
 
 		if (drwav__is_compressed_format_tag(m_drWav.translatedFormatTag)) {
-			return samples2ms(m_drWav.compressed.iCurrentPCMFrame) / (float)GetChannels();
+			return samples2ms(m_drWav.compressed.iCurrentPCMFrame);
 		} else {
 			uint32 bytes_per_frame = GetSampleSize();
 			return samples2ms(
 				((m_drWav.totalPCMFrameCount * bytes_per_frame) - m_drWav.bytesRemaining) / bytes_per_frame
-			) / (float)GetChannels();
+			);
 		}
 	}
 	
