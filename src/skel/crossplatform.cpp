@@ -31,9 +31,8 @@ static float gAxes[GLFW_GAMEPAD_AXIS_LAST+1];
 unsigned char* glfwGetJoystickButtons(int jid, int* count)
 {
 	SceCtrlData pad;
-	SceTouchData touch;
+	SceTouchData touch[SCE_TOUCH_PORT_MAX_NUM];
 	sceCtrlPeekBufferPositiveExt2(0, &pad, 1);
-	sceTouchPeek(0, &touch, 1);
 	gButtons[GLFW_GAMEPAD_BUTTON_CROSS]        = pad.buttons & SCE_CTRL_CROSS    ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_CIRCLE]       = pad.buttons & SCE_CTRL_CIRCLE   ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_SQUARE]       = pad.buttons & SCE_CTRL_SQUARE   ? GLFW_PRESS : GLFW_RELEASE;
@@ -45,12 +44,15 @@ unsigned char* glfwGetJoystickButtons(int jid, int* count)
 	gButtons[GLFW_GAMEPAD_BUTTON_GUIDE]        = GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB]   = pad.buttons & SCE_CTRL_L3       ? GLFW_PRESS : GLFW_RELEASE;
 	gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB]  = pad.buttons & SCE_CTRL_R3       ? GLFW_PRESS : GLFW_RELEASE;
-	for (int i = 0; i < touch.reportNum; i++) {
-		if (touch.report[i].y > 1088/2) {
-			if (touch.report[i].x < 1920/2)
-				gButtons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB]  = GLFW_PRESS;
-			else
-				gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB] = GLFW_PRESS;
+	for (int port = 0; port < SCE_TOUCH_PORT_MAX_NUM; port++) {
+		sceTouchPeek(port, &touch[port], 1);
+		for (int i = 0; i < touch[port].reportNum; i++) {
+			if (touch[port].report[i].y > 1088/2) {
+				if (touch[port].report[i].x < 1920/2)
+					gButtons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB]  = GLFW_PRESS;
+				else
+					gButtons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB] = GLFW_PRESS;
+			}
 		}
 	}
 	gButtons[GLFW_GAMEPAD_BUTTON_DPAD_UP]      = pad.buttons & SCE_CTRL_UP       ? GLFW_PRESS : GLFW_RELEASE;
@@ -65,21 +67,23 @@ unsigned char* glfwGetJoystickButtons(int jid, int* count)
 float* glfwGetJoystickAxes(int jid, int* count)
 {
 	SceCtrlData pad;
-	SceTouchData touch;
+	SceTouchData touch[SCE_TOUCH_PORT_MAX_NUM];
 	sceCtrlPeekBufferPositiveExt2(0, &pad, 1);
-	sceTouchPeek(0, &touch, 1);
 	gAxes[GLFW_GAMEPAD_AXIS_LEFT_X]        = ((float)pad.lx - 128.0f) / 128.0f;
 	gAxes[GLFW_GAMEPAD_AXIS_LEFT_Y]        = ((float)pad.ly - 128.0f) / 128.0f;
 	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_X]       = ((float)pad.rx - 128.0f) / 128.0f;
 	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_Y]       = ((float)pad.ry - 128.0f) / 128.0f;
 	gAxes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]  = pad.buttons & SCE_CTRL_L2 ? 1.0f : -1.0f;
 	gAxes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = pad.buttons & SCE_CTRL_R2 ? 1.0f : -1.0f;
-	for (int i = 0; i < touch.reportNum; i++) {
-		if (touch.report[i].y < 1088/2) {
-			if (touch.report[i].x < 1920/2)
-				gAxes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]  = 1.0f;
-			else
-				gAxes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = 1.0f;
+	for (int port = 0; port < SCE_TOUCH_PORT_MAX_NUM; port++) {
+		sceTouchPeek(port, &touch[port], 1);
+		for (int i = 0; i < touch[port].reportNum; i++) {
+			if (touch[port].report[i].y < 1088/2) {
+				if (touch[port].report[i].x < 1920/2)
+					gAxes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]  = 1.0f;
+				else
+					gAxes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = 1.0f;
+			}
 		}
 	}
 	if (count)
